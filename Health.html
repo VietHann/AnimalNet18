@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Phân loại Cảm xúc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .emotion-positive { background: linear-gradient(135deg, #10b981, #34d399); }
+        .emotion-negative { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .emotion-neutral { background: linear-gradient(135deg, #6b7280, #9ca3af); }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">🧠</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900">Phân loại Cảm xúc AI</h1>
+                </div>
+                <div id="userInfo" class="flex items-center space-x-4">
+                    <button id="loginBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        Đăng nhập
+                    </button>
+                    <button id="registerBtn" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-lg font-medium transition-colors">
+                        Đăng ký
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Login/Register Forms -->
+        <div id="authSection" class="max-w-md mx-auto">
+            <!-- Login Form -->
+            <div id="loginForm" class="bg-white rounded-xl shadow-xl p-8 fade-in hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Đăng nhập</h2>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="loginEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                        <input type="password" id="loginPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+                        Đăng nhập
+                    </button>
+                </form>
+                <p class="text-center text-gray-600 mt-4">
+                    Chưa có tài khoản? 
+                    <button id="switchToRegister" class="text-blue-600 hover:underline font-medium">Đăng ký ngay</button>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="bg-white rounded-xl shadow-xl p-8 fade-in hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Đăng ký</h2>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Họ tên</label>
+                        <input type="text" id="registerName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nguyễn Văn A">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="registerEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                        <input type="password" id="registerPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+                        Đăng ký
+                    </button>
+                </form>
+                <p class="text-center text-gray-600 mt-4">
+                    Đã có tài khoản? 
+                    <button id="switchToLogin" class="text-blue-600 hover:underline font-medium">Đăng nhập</button>
+                </p>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="hidden fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Text Analysis Section -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-xl p-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Phân tích Cảm xúc Văn bản</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nhập văn bản cần phân tích</label>
+                                <textarea id="textInput" rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="Nhập văn bản của bạn ở đây..."></textarea>
+                            </div>
+                            <button id="analyzeBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-medium transition-all transform hover:scale-105">
+                                🔍 Phân tích Cảm xúc
+                            </button>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="analysisResult" class="mt-8 hidden">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Kết quả Phân tích</h3>
+                            <div id="emotionCard" class="p-6 rounded-xl text-white text-center">
+                                <div class="text-4xl mb-2" id="emotionIcon">😊</div>
+                                <div class="text-xl font-bold mb-2" id="emotionLabel">Tích cực</div>
+                                <div class="text-lg opacity-90" id="emotionScore">Độ tin cậy: 95%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div>
+                    <div class="bg-white rounded-xl shadow-xl p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Lịch sử Phân tích</h3>
+                        <div id="historyList" class="space-y-3">
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="text-sm text-gray-600 truncate">Hôm nay thật tuyệt vời!</div>
+                                <div class="text-xs text-green-600 font-medium mt-1">Tích cực - 92%</div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="text-sm text-gray-600 truncate">Tôi cảm thấy buồn...</div>
+                                <div class="text-xs text-red-600 font-medium mt-1">Tiêu cực - 88%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="hidden fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Model Management -->
+                <div class="bg-white rounded-xl shadow-xl p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Quản lý Model</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Model hiện tại</label>
+                            <select id="modelSelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="bert-base">BERT Base (Mặc định)</option>
+                                <option value="roberta">RoBERTa Large</option>
+                                <option value="distilbert">DistilBERT</option>
+                                <option value="xlm-roberta">XLM-RoBERTa</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Độ chính xác</label>
+                            <input type="range" id="accuracySlider" min="0.7" max="1.0" step="0.01" value="0.95" class="w-full">
+                            <div class="text-sm text-gray-600 mt-1">Ngưỡng: <span id="accuracyValue">95%</span></div>
+                        </div>
+                        <button id="updateModelBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors">
+                            Cập nhật Model
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Settings -->
+                <div class="bg-white rounded-xl shadow-xl p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Cài đặt Hệ thống</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="flex items-center space-x-3">
+                                <input type="checkbox" id="enableLogging" checked class="w-5 h-5 text-blue-600 rounded">
+                                <span class="text-gray-700">Ghi log hoạt động</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-3">
+                                <input type="checkbox" id="enableCache" checked class="w-5 h-5 text-blue-600 rounded">
+                                <span class="text-gray-700">Bật cache kết quả</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Giới hạn request/phút</label>
+                            <input type="number" id="rateLimit" value="100" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <button id="saveSettingsBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+                            Lưu Cài đặt
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="mt-8 bg-white rounded-xl shadow-xl p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Thống kê Hệ thống</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="text-center p-4 bg-blue-50 rounded-lg">
+                        <div class="text-3xl font-bold text-blue-600">1,234</div>
+                        <div class="text-sm text-gray-600">Tổng phân tích</div>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <div class="text-3xl font-bold text-green-600">567</div>
+                        <div class="text-sm text-gray-600">Người dùng hoạt động</div>
+                    </div>
+                    <div class="text-center p-4 bg-purple-50 rounded-lg">
+                        <div class="text-3xl font-bold text-purple-600">95.2%</div>
+                        <div class="text-sm text-gray-600">Độ chính xác</div>
+                    </div>
+                    <div class="text-center p-4 bg-orange-50 rounded-lg">
+                        <div class="text-3xl font-bold text-orange-600">0.8s</div>
+                        <div class="text-sm text-gray-600">Thời gian xử lý</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // State management
+        let currentUser = null;
+        let isLoggedIn = false;
+
+        // DOM elements
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const authSection = document.getElementById('authSection');
+        const userDashboard = document.getElementById('userDashboard');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const userInfo = document.getElementById('userInfo');
+
+        // Show login form
+        loginBtn.addEventListener('click', () => {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+        });
+
+        // Show register form
+        registerBtn.addEventListener('click', () => {
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+
+        // Switch between forms
+        document.getElementById('switchToRegister').addEventListener('click', () => {
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+
+        document.getElementById('switchToLogin').addEventListener('click', () => {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+        });
+
+        // Handle login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (email && password) {
+                // Simulate login
+                currentUser = {
+                    email: email,
+                    name: email === 'admin@admin.com' ? 'Admin' : 'Người dùng',
+                    role: email === 'admin@admin.com' ? 'admin' : 'user'
+                };
+                
+                loginUser();
+            }
+        });
+
+        // Handle register
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            if (name && email && password) {
+                // Simulate registration
+                currentUser = {
+                    email: email,
+                    name: name,
+                    role: 'user'
+                };
+                
+                loginUser();
+            }
+        });
+
+        // Login user
+        function loginUser() {
+            isLoggedIn = true;
+            authSection.classList.add('hidden');
+            
+            // Update header
+            userInfo.innerHTML = `
+                <span class="text-gray-700">Xin chào, <strong>${currentUser.name}</strong></span>
+                <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    Đăng xuất
+                </button>
+            `;
+            
+            // Show appropriate dashboard
+            if (currentUser.role === 'admin') {
+                adminDashboard.classList.remove('hidden');
+            } else {
+                userDashboard.classList.remove('hidden');
+            }
+            
+            // Add logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+
+        // Logout
+        function logout() {
+            isLoggedIn = false;
+            currentUser = null;
+            
+            // Hide dashboards
+            userDashboard.classList.add('hidden');
+            adminDashboard.classList.add('hidden');
+            
+            // Reset header
+            userInfo.innerHTML = `
+                <button id="loginBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    Đăng nhập
+                </button>
+                <button id="registerBtn" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-lg font-medium transition-colors">
+                    Đăng ký
+                </button>
+            `;
+            
+            // Re-add event listeners
+            document.getElementById('loginBtn').addEventListener('click', () => {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            });
+            
+            document.getElementById('registerBtn').addEventListener('click', () => {
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            });
+        }
+
+        // Text analysis functionality
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) return;
+            
+            // Simulate analysis
+            const emotions = [
+                { label: 'Tích cực', icon: '😊', class: 'emotion-positive', score: Math.random() * 20 + 80 },
+                { label: 'Tiêu cực', icon: '😢', class: 'emotion-negative', score: Math.random() * 20 + 80 },
+                { label: 'Trung tính', icon: '😐', class: 'emotion-neutral', score: Math.random() * 20 + 80 }
+            ];
+            
+            const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+            
+            // Show result
+            const resultDiv = document.getElementById('analysisResult');
+            const emotionCard = document.getElementById('emotionCard');
+            const emotionIcon = document.getElementById('emotionIcon');
+            const emotionLabel = document.getElementById('emotionLabel');
+            const emotionScore = document.getElementById('emotionScore');
+            
+            emotionCard.className = `p-6 rounded-xl text-white text-center ${randomEmotion.class}`;
+            emotionIcon.textContent = randomEmotion.icon;
+            emotionLabel.textContent = randomEmotion.label;
+            emotionScore.textContent = `Độ tin cậy: ${Math.round(randomEmotion.score)}%`;
+            
+            resultDiv.classList.remove('hidden');
+            
+            // Add to history
+            const historyList = document.getElementById('historyList');
+            const historyItem = document.createElement('div');
+            historyItem.className = 'p-3 bg-gray-50 rounded-lg';
+            historyItem.innerHTML = `
+                <div class="text-sm text-gray-600 truncate">${text.substring(0, 30)}...</div>
+                <div class="text-xs font-medium mt-1" style="color: ${randomEmotion.label === 'Tích cực' ? '#10b981' : randomEmotion.label === 'Tiêu cực' ? '#ef4444' : '#6b7280'}">${randomEmotion.label} - ${Math.round(randomEmotion.score)}%</div>
+            `;
+            historyList.insertBefore(historyItem, historyList.firstChild);
+        });
+
+        // Admin functionality
+        document.getElementById('accuracySlider')?.addEventListener('input', (e) => {
+            document.getElementById('accuracyValue').textContent = Math.round(e.target.value * 100) + '%';
+        });
+
+        document.getElementById('updateModelBtn')?.addEventListener('click', () => {
+            const model = document.getElementById('modelSelect').value;
+            const accuracy = document.getElementById('accuracySlider').value;
+            
+            alert(`Model đã được cập nhật!\nModel: ${model}\nNgưỡng độ chính xác: ${Math.round(accuracy * 100)}%`);
+        });
+
+        document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
+            const logging = document.getElementById('enableLogging').checked;
+            const cache = document.getElementById('enableCache').checked;
+            const rateLimit = document.getElementById('rateLimit').value;
+            
+            alert(`Cài đặt đã được lưu!\nGhi log: ${logging ? 'Bật' : 'Tắt'}\nCache: ${cache ? 'Bật' : 'Tắt'}\nGiới hạn: ${rateLimit} request/phút`);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97eeb918d7dd0893',t:'MTc1Nzg0MDczMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
