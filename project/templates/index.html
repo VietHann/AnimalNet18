@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hệ thống Nhận diện Động vật</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, .1);
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 15px 35px rgba(79, 172, 254, .3);
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #4299e1;
+            background-color: #f7fafc;
+        }
+
+        .upload-area.dragover {
+            border-color: #3182ce;
+            background-color: #ebf8ff;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        .slide-in {
+            animation: slideIn .5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .progress-bar {
+            width: 0%;
+            transition: width .3s ease;
+        }
+
+        .history-item {
+            transition: all .2s ease;
+        }
+
+        .history-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+        }
+
+        /* Modal */
+        .modal-bg {
+            background: rgba(0, 0, 0, .35);
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-200/50 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center shadow-lg">
+                        <!-- Icon thay thế -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 3c1.5 0 2.5 1 2.5 2.5S13.5 8 12 8s-2.5-1-2.5-2.5S10.5 3 12 3zM6 6c1.5 0 2.5 1 2.5 2.5S7.5 11 6 11s-2.5-1-2.5-2.5S4.5 6 6 6zm12 0c1.5 0 2.5 1 2.5 2.5S19.5 11 18 11s-2.5-1-2.5-2.5S16.5 6 18 6zM8 14c2 0 4 1 4 3v2H4v-2c0-2 2-3 4-3zm8 0c2 0 4 1 4 3v2h-8v-2c0-2 2-3 4-3z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1
+                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                            Nhận diện Động vật
+                        </h1>
+                        <p class="text-sm text-gray-500">Model Animal</p>
+                    </div>
+                </div>
+                <div id="userInfo" class="flex items-center space-x-4"></div>
+            </div>
+        </div>
+    </header>
+
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- USER DASHBOARD -->
+        <div id="appMain" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
+            <!-- Main Recognition Panel -->
+            <div class="lg:col-span-2">
+                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 card-hover">
+                    <div class="text-center mb-8">
+                        <div
+                            class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-full mb-4 shadow-lg">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Nhận diện Động vật</h2>
+                        <p class="text-gray-600">Tải lên hình ảnh để AI nhận diện loài động vật</p>
+                    </div>
+
+                    <!-- Upload Area -->
+                    <div class="mb-8">
+                        <div id="uploadArea" class="upload-area rounded-xl p-8 text-center cursor-pointer">
+                            <input type="file" id="imageInput" accept="image/*" class="hidden" />
+                            <div id="uploadContent">
+                                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                    </path>
+                                </svg>
+                                <p class="text-lg font-medium text-gray-700 mb-2">Kéo thả ảnh vào đây</p>
+                                <p class="text-sm text-gray-500 mb-4">hoặc click để chọn file</p>
+                                <div
+                                    class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                    Chọn ảnh động vật
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div id="progressContainer" class="hidden mt-4">
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div id="progressBar"
+                                    class="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full progress-bar">
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 text-center">Đang phân tích...</p>
+                        </div>
+                    </div>
+
+                    <!-- Analyze Button -->
+                    <button id="analyzeBtn"
+                        class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        <span class="inline-flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Bắt đầu nhận diện
+                        </span>
+                    </button>
+
+                    <!-- Result Display -->
+                    <div id="analysisResult" class="mt-8 hidden slide-in">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6 text-center">Kết quả nhận diện</h3>
+                        <div id="animalCard" class="result-card rounded-2xl p-8 text-white text-center">
+                            <div class="mb-6">
+                                <img id="previewImage" src="" alt="Ảnh động vật"
+                                    class="mx-auto rounded-xl shadow-lg max-h-64 w-auto" />
+                            </div>
+                            <div class="space-y-4">
+                                <div class="text-6xl animate-bounce" id="animalIcon">🐾</div>
+                                <div>
+                                    <div class="text-3xl font-bold mb-2" id="animalLabel">—</div>
+                                    <div class="text-xl opacity-90" id="animalScore">Độ tin cậy: —</div>
+                                </div>
+                                <div class="flex justify-center space-x-4 mt-6">
+                                    <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                                        <div class="text-sm opacity-75">Thời gian xử lý</div>
+                                        <div id="latency" class="font-semibold">—</div>
+                                    </div>
+                                    <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                                        <div class="text-sm opacity-75">Model sử dụng</div>
+                                        <div id="modelUsed" class="font-semibold">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Sidebar -->
+            <div class="space-y-6">
+                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-900">Lịch sử nhận diện</h3>
+                        <span id="historyCount"
+                            class="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full font-medium">0
+                            ảnh</span>
+                    </div>
+                    <div id="historyList" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                    <button id="viewAllBtn"
+                        class="w-full mt-4 text-indigo-600 hover:text-indigo-800 font-medium text-sm border border-indigo-200 rounded-lg py-2 hover:bg-indigo-50 transition-colors">
+                        Xem tất cả
+                    </button>
+                </div>
+
+                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 card-hover">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Thống kê</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Tổng ảnh đã xử lý</span>
+                            <span id="statTotal" class="font-bold text-indigo-600">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Độ chính xác trung bình</span>
+                            <span id="statAcc" class="font-bold text-green-600">—</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Động vật phổ biến</span>
+                            <span id="statCommon" class="font-bold text-purple-600">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD -->
+        <div id="adminDashboard" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Quản lý Model -->
+                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Quản lý Model</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Model hiện tại</label>
+                            <select id="modelSelect"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="AnimalVie">AnimalVie</option>
+                                <option value="AnimalNet18">AnimalNet18</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Độ chính xác</label>
+                            <input type="range" id="accuracySlider" min="0.7" max="1.0" step="0.01" value="0.95"
+                                class="w-full" />
+                            <div class="text-sm text-gray-600 mt-1">Ngưỡng: <span id="accuracyValue">95%</span></div>
+                        </div>
+                        <button id="updateModelBtn"
+                            class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors">
+                            Cập nhật Model
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cài đặt hệ thống -->
+                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Cài đặt Hệ thống</h2>
+                    <div class="space-y-6">
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" id="enableLogging" checked class="w-5 h-5 text-indigo-600 rounded" />
+                            <span class="text-gray-700">Ghi log hoạt động</span>
+                        </label>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" id="enableCache" checked class="w-5 h-5 text-indigo-600 rounded" />
+                            <span class="text-gray-700">Bật cache kết quả</span>
+                        </label>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Giới hạn request/phút</label>
+                            <input type="number" id="rateLimit" value="100"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                        </div>
+                        <button id="saveSettingsBtn"
+                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium">
+                            Lưu Cài đặt
+                        </button>
+
+                        <div class="mt-8">
+                            <button id="loadLogsBtn"
+                                class="w-full border border-gray-300 hover:bg-gray-50 py-3 rounded-lg font-medium">Tải
+                                logs (admin)</button>
+                            <pre id="adminLogs"
+                                class="mt-4 text-sm bg-gray-50 p-4 rounded-lg overflow-x-auto hidden"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- AUTH MODALS -->
+    <div id="loginModal" class="fixed inset-0 hidden items-center justify-center modal-bg z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 mx-4">
+            <h3 class="text-2xl font-bold mb-4">Đăng nhập</h3>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email</label>
+                    <input id="loginEmail" type="email" class="w-full border rounded-lg px-4 py-2"
+                        placeholder="you@email.com" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Mật khẩu</label>
+                    <input id="loginPassword" type="password" class="w-full border rounded-lg px-4 py-2"
+                        placeholder="••••••••" required />
+                </div>
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-indigo-600 text-white rounded-lg py-2 hover:bg-indigo-700">Đăng
+                        nhập</button>
+                    <button type="button" data-close="#loginModal"
+                        class="flex-1 border rounded-lg py-2 hover:bg-gray-50">Hủy</button>
+                </div>
+            </form>
+            <p class="text-sm text-gray-600 mt-3">Chưa có tài khoản?
+                <button id="switchToRegister" class="text-indigo-600 font-medium hover:underline">Đăng ký</button>
+            </p>
+        </div>
+    </div>
+
+    <div id="registerModal" class="fixed inset-0 hidden items-center justify-center modal-bg z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 mx-4">
+            <h3 class="text-2xl font-bold mb-4">Đăng ký</h3>
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Họ tên</label>
+                    <input id="registerName" type="text" class="w-full border rounded-lg px-4 py-2"
+                        placeholder="Nguyễn Văn A" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email</label>
+                    <input id="registerEmail" type="email" class="w-full border rounded-lg px-4 py-2"
+                        placeholder="you@email.com" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Mật khẩu</label>
+                    <input id="registerPassword" type="password" class="w-full border rounded-lg px-4 py-2"
+                        placeholder="••••••••" required />
+                </div>
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-indigo-600 text-white rounded-lg py-2 hover:bg-indigo-700">Đăng ký</button>
+                    <button type="button" data-close="#registerModal"
+                        class="flex-1 border rounded-lg py-2 hover:bg-gray-50">Hủy</button>
+                </div>
+            </form>
+            <p class="text-sm text-gray-600 mt-3">Đã có tài khoản?
+                <button id="switchToLogin" class="text-indigo-600 font-medium hover:underline">Đăng nhập</button>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ========= Helpers =========
+        const userInfo = document.getElementById('userInfo');
+        const appMain = document.getElementById('appMain');
+        const adminDashboard = document.getElementById('adminDashboard');
+
+        function $(sel) { return document.querySelector(sel); }
+        function show(el) { el.classList.remove('hidden'); }
+        function hide(el) { el.classList.add('hidden'); }
+
+        async function api(path, options = {}) {
+            const res = await fetch(path, {
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || 'Request failed');
+            return data;
+        }
+
+        function pickIcon(label = '') {
+            const l = label.toLowerCase();
+
+            if (l.includes('butterfly')) return '🦋';
+            if (l.includes('cat')) return '🐱';
+            if (l.includes('chicken')) return '🐔';
+            if (l.includes('cow')) return '🐄';
+            if (l.includes('dog')) return '🐕';
+            if (l.includes('elephant')) return '🐘';
+            if (l.includes('horse')) return '🐎';
+            if (l.includes('sheep')) return '🐑';
+            if (l.includes('spider')) return '🕷️';
+            if (l.includes('squirrel')) return '🐿️';
+
+            return '🐾'; // fallback icon
+        }
+
+
+        // ========= UI Rendering =========
+        function renderLoggedInUI(user) {
+            if (user.role === 'admin') {
+                hide(appMain);
+                show(adminDashboard);
+            } else {
+                hide(adminDashboard);
+                show(appMain);
+                loadHistory();
+            }
+            userInfo.innerHTML = `
+        <span class="text-gray-700">Xin chào, <strong>${user.name}</strong>${user.role ? ' <span class="text-xs text-gray-500">(' + user.role + ')</span>' : ''}</span>
+        <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg">Đăng xuất</button>
+      `;
+            $('#logoutBtn').addEventListener('click', async () => { try { await api('/logout', { method: 'POST' }); location.reload(); } catch (e) { alert(e.message); } });
+        }
+
+        function renderLoggedOutUI() {
+            hide(appMain);
+            hide(adminDashboard);
+            userInfo.innerHTML = `
+        <button id="loginBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-md">Đăng nhập</button>
+        <button id="registerBtn" class="border border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-medium">Đăng ký</button>
+      `;
+            $('#loginBtn').addEventListener('click', () => openModal('#loginModal'));
+            $('#registerBtn').addEventListener('click', () => openModal('#registerModal'));
+        }
+
+        // ========= Auth Modals =========
+        function openModal(sel) { const m = $(sel); m.classList.add('flex'); m.classList.remove('hidden'); }
+        function closeModal(sel) { const m = $(sel); m.classList.remove('flex'); m.classList.add('hidden'); }
+        document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', e => closeModal(e.currentTarget.dataset.close)));
+        $('#switchToRegister').addEventListener('click', () => { closeModal('#loginModal'); openModal('#registerModal'); });
+        $('#switchToLogin').addEventListener('click', () => { closeModal('#registerModal'); openModal('#loginModal'); });
+
+        // Submit login
+        $('#loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const data = await api('/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: $('#loginEmail').value, password: $('#loginPassword').value })
+                });
+                closeModal('#loginModal');
+                renderLoggedInUI(data.user);
+            } catch (err) { alert(err.message); }
+        });
+
+        // Submit register
+        $('#registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const data = await api('/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: $('#registerName').value,
+                        email: $('#registerEmail').value,
+                        password: $('#registerPassword').value
+                    })
+                });
+                closeModal('#registerModal');
+                renderLoggedInUI(data.user);
+            } catch (err) { alert(err.message); }
+        });
+
+        // ========= On load: check session =========
+        (async () => {
+            try {
+                const { user } = await api('/me');
+                if (user) renderLoggedInUI(user); else renderLoggedOutUI();
+            } catch { renderLoggedOutUI(); }
+        })();
+
+        // ========= Upload & Predict =========
+        let currentFile = null;
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const analysisResult = document.getElementById('analysisResult');
+        const previewImage = document.getElementById('previewImage');
+        const animalLabel = document.getElementById('animalLabel');
+        const animalScore = document.getElementById('animalScore');
+        const animalIcon = document.getElementById('animalIcon');
+        const latencyEl = document.getElementById('latency');
+        const modelUsedEl = document.getElementById('modelUsed');
+
+        uploadArea.addEventListener('click', () => imageInput.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault(); uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
+        });
+        imageInput.addEventListener('change', (e) => { if (e.target.files.length > 0) handleFileSelect(e.target.files[0]); });
+
+        function handleFileSelect(file) {
+            if (!file.type.startsWith('image/')) { alert('Vui lòng chọn file ảnh!'); return; }
+            currentFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('uploadContent').innerHTML = `
+          <img src="${e.target.result}" class="w-32 h-32 object-cover rounded-lg mx-auto mb-4 shadow-lg" />
+          <p class="text-lg font-medium text-gray-700 mb-2">Ảnh đã được chọn</p>
+          <p class="text-sm text-gray-500">${file.name}</p>
+        `;
+            };
+            reader.readAsDataURL(file);
+            analyzeBtn.disabled = false;
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            if (!currentFile) { alert('Vui lòng chọn ảnh trước!'); return; }
+
+            show(progressContainer);
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<span class="pulse-animation">Đang phân tích...</span>';
+
+            let prog = 0;
+            const iv = setInterval(() => { prog = Math.min(prog + Math.random() * 18, 90); progressBar.style.width = prog + '%'; }, 200);
+
+            const t0 = performance.now();
+            const formData = new FormData();
+            formData.append('file', currentFile);
+
+            try {
+                const res = await fetch('/predict', { method: 'POST', body: formData, credentials: 'include' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Predict failed');
+
+                const t1 = performance.now();
+
+                previewImage.src = URL.createObjectURL(currentFile);
+                const label = data.prediction || '—';
+                const conf = typeof data.confidence === 'number' ? Math.round(data.confidence * 100) : null;
+                animalLabel.textContent = label;
+                animalScore.textContent = `Độ tin cậy: ${conf !== null ? conf + '%' : '—'}`;
+                animalIcon.textContent = pickIcon(label);
+                latencyEl.textContent = `${((t1 - t0) / 1000).toFixed(2)} giây`;
+                let modelName = data.model;
+                if (!modelName) {
+                    try {
+                        const cfg = await api('/config');
+                        modelName = cfg.current_model;
+                    } catch (e) {
+                        console.warn("Không lấy được model từ /config:", e.message);
+                    }
+                }
+                modelUsedEl.textContent = modelName || 'AnimalVie';
+
+
+                show(analysisResult);
+
+                prependHistoryItem({ filename: currentFile.name, label, confidence: data.confidence, created_at: new Date().toISOString() });
+                updateStatsAfterOne(conf);
+
+            } catch (err) {
+                alert('Lỗi: ' + err.message);
+                console.error(err);
+            } finally {
+                clearInterval(iv);
+                progressBar.style.width = '100%';
+                setTimeout(() => { hide(progressContainer); progressBar.style.width = '0%'; }, 300);
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = `
+          <span class="inline-flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            Bắt đầu nhận diện
+          </span>`;
+            }
+        });
+
+        // ========= History =========
+        const historyList = document.getElementById('historyList');
+        const historyCount = document.getElementById('historyCount');
+        const statTotal = document.getElementById('statTotal');
+        const statAcc = document.getElementById('statAcc');
+        const statCommon = document.getElementById('statCommon');
+
+        function prependHistoryItem(item) {
+            const conf = typeof item.confidence === 'number' ? Math.round(item.confidence * 100) + '%' : '';
+            const div = document.createElement('div');
+            div.className = 'history-item bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-4 slide-in';
+            div.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-lg">${pickIcon(item.label)}</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-gray-900 truncate">${item.filename || ''}</div>
+            <div class="text-sm text-blue-600 font-medium">${item.label || ''} ${conf ? ('- ' + conf) : ''}</div>
+            <div class="text-xs text-gray-500">${new Date(item.created_at).toLocaleString('vi-VN')}</div>
+          </div>
+        </div>
+      `;
+            historyList.insertBefore(div, historyList.firstChild);
+            updateHistoryCount();
+        }
+
+        async function loadHistory() {
+            try {
+                const data = await api('/history');
+                historyList.innerHTML = '';
+                (data.items || []).forEach(prependHistoryItem);
+                if (typeof data.total === 'number') statTotal.textContent = data.total;
+                if (typeof data.avg_accuracy === 'number') statAcc.textContent = (data.avg_accuracy * 100).toFixed(1) + '%';
+                if (Array.isArray(data.common_labels) && data.common_labels.length) statCommon.textContent = data.common_labels.join(', ');
+                updateHistoryCount();
+            } catch (e) { console.warn('Không tải được lịch sử:', e.message); }
+        }
+
+        function updateHistoryCount() {
+            const n = historyList.children.length;
+            historyCount.textContent = `${n} ảnh`;
+            if (!Number.isNaN(parseInt(statTotal.textContent))) return;
+            statTotal.textContent = String(n);
+        }
+
+        function updateStatsAfterOne(confPercent) {
+            const n = historyList.children.length;
+            statTotal.textContent = String(n);
+            if (confPercent != null) {
+                const curr = parseFloat((statAcc.textContent || '').replace('%', ''));
+                const currN = Number.isFinite(curr) ? n - 1 : 0;
+                const newAvg = currN ? (curr * currN + confPercent) / n : confPercent;
+                statAcc.textContent = newAvg.toFixed(1) + '%';
+            }
+        }
+
+        document.getElementById('viewAllBtn').addEventListener('click', () => { historyList.scrollTop = historyList.scrollHeight; });
+
+        // ========= Admin Controls =========
+        document.getElementById('accuracySlider')?.addEventListener('input', (e) => {
+            document.getElementById('accuracyValue').textContent = Math.round(e.target.value * 100) + '%';
+        });
+
+        document.getElementById('updateModelBtn')?.addEventListener('click', async () => {
+            const model = document.getElementById('modelSelect').value;
+            const accuracy = document.getElementById('accuracySlider').value;
+            try {
+                await api('/update-model', { method: 'POST', body: JSON.stringify({ model, accuracy }) });
+                alert(`Model đã được cập nhật!\nModel: ${model}\nNgưỡng: ${Math.round(accuracy * 100)}%`);
+            } catch (err) { alert('Cập nhật model thất bại: ' + err.message); }
+        });
+
+        document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
+            const logging = document.getElementById('enableLogging').checked;
+            const cache = document.getElementById('enableCache').checked;
+            const rateLimit = document.getElementById('rateLimit').value;
+            alert(`Cài đặt đã được lưu!\nLog: ${logging ? 'Bật' : 'Tắt'}\nCache: ${cache ? 'Bật' : 'Tắt'}\nGiới hạn: ${rateLimit}/phút`);
+        });
+
+        document.getElementById('loadLogsBtn')?.addEventListener('click', async () => {
+            try {
+                const data = await api('/logs');
+                const pre = document.getElementById('adminLogs');
+                pre.textContent = JSON.stringify(data.logs, null, 2);
+                pre.classList.remove('hidden');
+            } catch (err) { alert(err.message); }
+        });
+    </script>
+</body>
+
+</html>

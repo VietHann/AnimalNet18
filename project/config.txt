@@ -1,0 +1,8 @@
+@"
+import sqlite3
+con = sqlite3.connect("database.db")
+con.execute("UPDATE users SET role='admin' WHERE email=?", ("admin@admin.com",))
+con.commit()
+con.close()
+print("Set admin cho admin@admin.com")
+"@ | python -
